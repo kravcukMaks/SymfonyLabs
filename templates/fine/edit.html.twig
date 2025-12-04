@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit Fine{% endblock %}
+
+{% block body %}
+    <h1>Edit Fine</h1>
+
+    {{ include('fine/_form.html.twig', {'button_label': 'Update'}) }}
+
+    <a href="{{ path('app_fine_index') }}">back to list</a>
+
+    {{ include('fine/_delete_form.html.twig') }}
+{% endblock %}

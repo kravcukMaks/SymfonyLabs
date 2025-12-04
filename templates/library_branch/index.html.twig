@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}LibraryBranch index{% endblock %}
+
+{% block body %}
+    <h1>LibraryBranch index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Address</th>
+                <th>Books</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for library_branch in library_branches %}
+            <tr>
+                <td>{{ library_branch.id }}</td>
+                <td>{{ library_branch.name }}</td>
+                <td>{{ library_branch.address }}</td>
+                <td>{{ library_branch.books }}</td>
+                <td>
+                    <a href="{{ path('app_library_branch_show', {'id': library_branch.id}) }}">show</a>
+                    <a href="{{ path('app_library_branch_edit', {'id': library_branch.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="5">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_library_branch_new') }}">Create new</a>
+{% endblock %}

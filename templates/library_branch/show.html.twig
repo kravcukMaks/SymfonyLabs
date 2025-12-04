@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}LibraryBranch{% endblock %}
+
+{% block body %}
+    <h1>LibraryBranch</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ library_branch.id }}</td>
+            </tr>
+            <tr>
+                <th>Name</th>
+                <td>{{ library_branch.name }}</td>
+            </tr>
+            <tr>
+                <th>Address</th>
+                <td>{{ library_branch.address }}</td>
+            </tr>
+            <tr>
+                <th>Books</th>
+                <td>{{ library_branch.books }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_library_branch_index') }}">back to list</a>
+
+    <a href="{{ path('app_library_branch_edit', {'id': library_branch.id}) }}">edit</a>
+
+    {{ include('library_branch/_delete_form.html.twig') }}
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New LibraryBranch{% endblock %}
+
+{% block body %}
+    <h1>Create new LibraryBranch</h1>
+
+    {{ include('library_branch/_form.html.twig') }}
+
+    <a href="{{ path('app_library_branch_index') }}">back to list</a>
+{% endblock %}
