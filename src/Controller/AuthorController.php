@@ -12,14 +12,20 @@ use Symfony\Component\Routing\Annotation\Route;
 class AuthorController extends AbstractController
 {
     #[Route('', name: 'author_create', methods: ['POST'])]
-    public function create(Request $request, AuthorService $service): Response
-    {
-        $data = json_decode($request->getContent(), true) ?? [];
-        $author = $service->create($data);
+    public function create(
+    Request $request,
+    AuthorService $service,
+    \App\Service\RequestCheckerService $checker
+    ): Response {
+    
+    $data = $checker->check($request, ['name']);
 
-        return $this->json([
-            'id' => $author->getId(),
-            'name' => $author->getName()
-        ], Response::HTTP_CREATED);
-    }
+    $author = $service->create($data);
+
+    return $this->json([
+        'id' => $author->getId(),
+        'name' => $author->getName()
+    ], Response::HTTP_CREATED);
+ }
+
 }

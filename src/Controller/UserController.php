@@ -27,16 +27,22 @@ class UserController extends AbstractController
     }
 
     #[Route('', methods: ['POST'])]
-    public function create(Request $request, UserService $service): Response
-    {
-        $data = json_decode($request->getContent(), true) ?? [];
-        $user = $service->create($data);
+    public function create(
+    Request $request,
+    UserService $service,
+    \App\Service\RequestCheckerService $checker
+    ): Response {
+    
+    $data = $checker->check($request, ['name', 'email']);
 
-        return $this->json([
-            'id' => $user->getId(),
-            'name' => $user->getName()
-        ], Response::HTTP_CREATED);
-    }
+    $user = $service->create($data);
+
+    return $this->json([
+        'id' => $user->getId(),
+        'name' => $user->getName()
+    ], Response::HTTP_CREATED);
+ }
+
 
     #[Route('/{id}', methods: ['GET'])]
     public function show(User $user): Response
