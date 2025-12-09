@@ -1,11 +1,13 @@
 <?php
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Repository\BookRepository;
 use App\Service\PaginationService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 #[Route('/books')]
+#[ApiResource]
 class BookController extends AbstractController
 {
     #[Route('', methods: ['GET'])]

@@ -1,4 +1,6 @@
 security:
+    enable_authenticator_manager: true
+
     password_hashers:
         App\Entity\User:
             algorithm: auto
@@ -11,12 +13,10 @@ security:
 
     firewalls:
 
-        # Debug toolbar Symfony - не чіпаємо
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
 
-        # Login endpoint
         login:
             pattern: ^/auth/login
             stateless: true
@@ -27,16 +27,13 @@ security:
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
 
-        # Main protected API
         main:
-            stateless: true
             provider: app_user_provider
+            stateless: true
             jwt: ~
 
     access_control:
-        # Login + register не потребує токена
         - { path: ^/auth/login, roles: PUBLIC_ACCESS }
         - { path: ^/auth/register, roles: PUBLIC_ACCESS }
-
-        # Все інше закрито
+        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/, roles: IS_AUTHENTICATED_FULLY }

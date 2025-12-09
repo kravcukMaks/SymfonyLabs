@@ -26,8 +26,7 @@ class AuthController extends AbstractController
         $user = new User();
         $user->setUsername($data['username']);
         $user->setEmail($data['email']);
-        $user->setRoles(['ROLE_USER']);
-        
+
         $hashedPassword = $passwordHasher->hashPassword($user, $data['password']);
         $user->setPassword($hashedPassword);
 
@@ -35,10 +34,8 @@ class AuthController extends AbstractController
         $em->flush();
 
         return $this->json([
-            'id' => $user->getId(),
-            'email' => $user->getEmail(),
+            'message' => 'User created successfully'
         ], Response::HTTP_CREATED);
     }
-
-    
+    // login handled automatically by firewall
 }
