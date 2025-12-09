@@ -36,13 +36,16 @@ class BookRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-//    public function findOneBySomeField($value): ?Book
-//    {
-//        return $this->createQueryBuilder('b')
-//            ->andWhere('b.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+public function search(?string $search): \Doctrine\ORM\QueryBuilder
+{
+    $qb = $this->createQueryBuilder('b');
+
+    if ($search) {
+        $qb->andWhere('LOWER(b.title) LIKE :s')
+           ->setParameter('s', '%' . strtolower($search) . '%');
+    }
+
+    return $qb;
+}
+
 }

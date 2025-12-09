@@ -14,11 +14,29 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/review')]
 class ReviewController extends AbstractController
 {
-    #[Route('/', name: 'app_review_index', methods: ['GET'])]
-    public function index(ReviewRepository $reviewRepository): Response
-    {
-        return $this->render('review/index.html.twig', [
-            'reviews' => $reviewRepository->findAll(),
+    #[Route('', methods: ['GET'])]
+    public function index(
+        Request $request,
+        ReviewRepository $repo,
+        \App\Service\PaginationService $pager
+    ): Response {
+        $search = $request->query->get('search');
+        $page   = (int) $request->query->get('page', 1);
+        $limit  = (int) $request->query->get('limit', 10);
+
+        $result = $pager->paginate($repo->search($search), $page, $limit);
+
+        return $this->json([
+            'items' => array_map(fn(Review $r) => [
+                'id'        => $r->getId(),
+                'rating'    => $r->getRating(),
+                'comment'   => $r->getComment(),
+                'createdAt' => $r->getCreatedAt()->format('Y-m-d H:i:s'),
+                'bookId'    => $r->getBook()?->getId(),
+            ], $result['items']),
+            'page'  => $result['page'],
+            'limit' => $result['limit'],
+            'count' => $result['count'],
         ]);
     }
 

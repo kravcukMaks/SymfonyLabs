@@ -36,13 +36,18 @@ class BorrowRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-//    public function findOneBySomeField($value): ?Borrow
-//    {
-//        return $this->createQueryBuilder('b')
-//            ->andWhere('b.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+public function search(?string $search): \Doctrine\ORM\QueryBuilder
+{
+    $qb = $this->createQueryBuilder('br')
+        ->join('br.book', 'b')
+        ->join('br.user', 'u');
+
+    if ($search) {
+        $qb->andWhere('LOWER(b.title) LIKE :s OR LOWER(u.name) LIKE :s OR LOWER(br.status) LIKE :s')
+           ->setParameter('s', '%' . strtolower($search) . '%');
+    }
+
+    return $qb;
+}
+
 }

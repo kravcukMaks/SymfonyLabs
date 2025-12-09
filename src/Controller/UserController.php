@@ -14,17 +14,28 @@ use Symfony\Component\Routing\Annotation\Route;
 class UserController extends AbstractController
 {
     #[Route('', methods: ['GET'])]
-    public function index(UserRepository $repo): Response
-    {
-        $users = $repo->findAll();
+    public function index(
+    Request $request,
+    UserRepository $repo,
+    \App\Service\PaginationService $pager
+ ): Response {
+    $search = $request->query->get('search');
+    $page   = (int) $request->query->get('page', 1);
+    $limit  = (int) $request->query->get('limit', 10);
 
-        $data = array_map(fn(User $u) => [
-            'id' => $u->getId(),
+    $result = $pager->paginate($repo->search($search), $page, $limit);
+
+    return $this->json([
+        'items' => array_map(fn(User $u) => [
+            'id'   => $u->getId(),
             'name' => $u->getName(),
-        ], $users);
+        ], $result['items']),
+        'page'  => $result['page'],
+        'limit' => $result['limit'],
+        'count' => $result['count'],
+    ]);
+ }
 
-        return $this->json($data);
-    }
 
     #[Route('', methods: ['POST'])]
     public function create(

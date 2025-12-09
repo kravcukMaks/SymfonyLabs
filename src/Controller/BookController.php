@@ -1,30 +1,33 @@
 <?php
 
-namespace App\Controller;
-
-use App\Service\BookService;
-use App\Service\RequestCheckerService;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use App\Repository\BookRepository;
+use App\Service\PaginationService;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\Response;
 
 #[Route('/books')]
 class BookController extends AbstractController
 {
-    #[Route('', name: 'book_create', methods: ['POST'])]
-    public function create(
+    #[Route('', methods: ['GET'])]
+    public function index(
         Request $request,
-        BookService $bookService,
-        RequestCheckerService $checker
-    ): JsonResponse {
-        $data = $checker->check($request, ['title']);
+        BookRepository $repo,
+        PaginationService $pager
+    ): Response {
+        $search = $request->query->get('search');
+        $page   = (int) $request->query->get('page', 1);
+        $limit  = (int) $request->query->get('limit', 10);
 
-        $book = $bookService->create($data);
+        $result = $pager->paginate($repo->search($search), $page, $limit);
 
         return $this->json([
-            'id' => $book->getId(),
-            'title' => $book->getTitle(),
+            'items' => array_map(fn($b) => [
+                'id'    => $b->getId(),
+                'title' => $b->getTitle(),
+            ], $result['items']),
+            'page'  => $result['page'],
+            'limit' => $result['limit'],
+            'count' => $result['count'],
         ]);
     }
 }

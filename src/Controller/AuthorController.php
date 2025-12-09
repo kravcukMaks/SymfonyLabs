@@ -7,25 +7,33 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Repository\AuthorRepository;
+use App\Service\PaginationService;
 
 #[Route('/authors')]
 class AuthorController extends AbstractController
 {
-    #[Route('', name: 'author_create', methods: ['POST'])]
-    public function create(
-    Request $request,
-    AuthorService $service,
-    \App\Service\RequestCheckerService $checker
+    #[Route('', methods: ['GET'])]
+    public function index(
+        Request $request,
+        AuthorRepository $repo,
+        PaginationService $pager
     ): Response {
-    
-    $data = $checker->check($request, ['name']);
+        $search = $request->query->get('search');
+        $page   = (int) $request->query->get('page', 1);
+        $limit  = (int) $request->query->get('limit', 10);
 
-    $author = $service->create($data);
+        $result = $pager->paginate($repo->search($search), $page, $limit);
 
-    return $this->json([
-        'id' => $author->getId(),
-        'name' => $author->getName()
-    ], Response::HTTP_CREATED);
- }
+        return $this->json([
+            'items' => array_map(fn(Author $a) => [
+                'id'   => $a->getId(),
+                'name' => $a->getName(),
+            ], $result['items']),
+            'page'  => $result['page'],
+            'limit' => $result['limit'],
+            'count' => $result['count'],
+        ]);
+    }
 
 }

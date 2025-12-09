@@ -36,13 +36,16 @@ class PublisherRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-//    public function findOneBySomeField($value): ?Publisher
-//    {
-//        return $this->createQueryBuilder('p')
-//            ->andWhere('p.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+public function search(?string $search): \Doctrine\ORM\QueryBuilder
+{
+    $qb = $this->createQueryBuilder('p');
+
+    if ($search) {
+        $qb->andWhere('LOWER(p.name) LIKE :s OR LOWER(p.address) LIKE :s')
+           ->setParameter('s', '%' . strtolower($search) . '%');
+    }
+
+    return $qb;
+}
+
 }

@@ -36,13 +36,17 @@ class FineRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-//    public function findOneBySomeField($value): ?Fine
-//    {
-//        return $this->createQueryBuilder('f')
-//            ->andWhere('f.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+public function search(?string $paid): \Doctrine\ORM\QueryBuilder
+{
+    $qb = $this->createQueryBuilder('f');
+
+    if ($paid !== null && $paid !== '') {
+        // ?paid=1 або ?paid=0
+        $qb->andWhere('f.paid = :p')
+           ->setParameter('p', (bool) $paid);
+    }
+
+    return $qb;
+}
+
 }

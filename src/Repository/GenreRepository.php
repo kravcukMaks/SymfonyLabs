@@ -36,13 +36,15 @@ class GenreRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-//    public function findOneBySomeField($value): ?Genre
-//    {
-//        return $this->createQueryBuilder('g')
-//            ->andWhere('g.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+public function search(?string $search): \Doctrine\ORM\QueryBuilder
+{
+    $qb = $this->createQueryBuilder('g');
+
+    if ($search) {
+        $qb->andWhere('LOWER(g.name) LIKE :s')
+           ->setParameter('s', '%' . strtolower($search) . '%');
+    }
+
+    return $qb;
+}
 }

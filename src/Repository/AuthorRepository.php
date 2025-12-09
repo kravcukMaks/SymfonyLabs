@@ -36,13 +36,15 @@ class AuthorRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-//    public function findOneBySomeField($value): ?Author
-//    {
-//        return $this->createQueryBuilder('a')
-//            ->andWhere('a.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+public function search(?string $search): \Doctrine\ORM\QueryBuilder
+{
+    $qb = $this->createQueryBuilder('a');
+
+    if ($search) {
+        $qb->andWhere('LOWER(a.name) LIKE :s')
+           ->setParameter('s', '%' . strtolower($search) . '%');
+    }
+
+    return $qb;
+}
 }

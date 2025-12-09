@@ -14,14 +14,32 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/fine')]
 class FineController extends AbstractController
 {
-    #[Route('/', name: 'app_fine_index', methods: ['GET'])]
-    public function index(FineRepository $fineRepository): Response
-    {
-        return $this->render('fine/index.html.twig', [
-            'fines' => $fineRepository->findAll(),
+    #[Route('', methods: ['GET'])]
+    public function index(
+        Request $request,
+        FineRepository $repo,
+        \App\Service\PaginationService $pager
+    ): Response {
+        $paid  = $request->query->get('paid'); // ?paid=1 або 0
+        $page   = (int) $request->query->get('page', 1);
+        $limit  = (int) $request->query->get('limit', 10);
+
+        $result = $pager->paginate($repo->search($paid), $page, $limit);
+
+        return $this->json([
+            'items' => array_map(fn(Fine $f) => [
+                'id'       => $f->getId(),
+                'amount'   => $f->getAmount(),
+                'issuedAt' => $f->getIssuedAt()->format('Y-m-d'),
+                'paid'     => $f->isPaid(),
+                'borrowId' => $f->getBorrow()->getId(),
+            ], $result['items']),
+            'page'  => $result['page'],
+            'limit' => $result['limit'],
+            'count' => $result['count'],
         ]);
     }
-
+    
     #[Route('/new', name: 'app_fine_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {

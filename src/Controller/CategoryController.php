@@ -3,79 +3,69 @@
 namespace App\Controller;
 
 use App\Entity\Category;
-use App\Form\CategoryType;
 use App\Repository\CategoryRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Service\CategoryService;
+use App\Service\PaginationService;
+use App\Service\RequestCheckerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/category')]
+#[Route('/categories')]
 class CategoryController extends AbstractController
 {
-    #[Route('/', name: 'app_category_index', methods: ['GET'])]
-    public function index(CategoryRepository $categoryRepository): Response
-    {
-        return $this->render('category/index.html.twig', [
-            'categories' => $categoryRepository->findAll(),
+    #[Route('', methods: ['GET'])]
+    public function index(
+        Request $request,
+        CategoryRepository $repo,
+        \App\Service\PaginationService $pager
+    ): Response {
+        $search = $request->query->get('search');
+        $page   = (int) $request->query->get('page', 1);
+        $limit  = (int) $request->query->get('limit', 10);
+
+        $result = $pager->paginate($repo->search($search), $page, $limit);
+
+        return $this->json([
+            'items' => array_map(fn(Category $c) => [
+                'id'   => $c->getId(),
+                'name' => $c->getName(),
+            ], $result['items']),
+            'page'  => $result['page'],
+            'limit' => $result['limit'],
+            'count' => $result['count'],
         ]);
     }
 
-    #[Route('/new', name: 'app_category_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    #[Route('', methods: ['POST'])]
+    public function create(Request $request, CategoryService $service, RequestCheckerService $checker): Response
     {
-        $category = new Category();
-        $form = $this->createForm(CategoryType::class, $category);
-        $form->handleRequest($request);
+        $data = $checker->check($request, ['name']);
+        $category = $service->create($data);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($category);
-            $entityManager->flush();
-
-            return $this->redirectToRoute('app_category_index', [], Response::HTTP_SEE_OTHER);
-        }
-
-        return $this->render('category/new.html.twig', [
-            'category' => $category,
-            'form' => $form,
-        ]);
+        return $this->json(['id' => $category->getId(), 'name' => $category->getName()], Response::HTTP_CREATED);
     }
 
-    #[Route('/{id}', name: 'app_category_show', methods: ['GET'])]
+    #[Route('/{id}', methods: ['GET'])]
     public function show(Category $category): Response
     {
-        return $this->render('category/show.html.twig', [
-            'category' => $category,
-        ]);
+        return $this->json(['id' => $category->getId(), 'name' => $category->getName()]);
     }
 
-    #[Route('/{id}/edit', name: 'app_category_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Category $category, EntityManagerInterface $entityManager): Response
+    #[Route('/{id}', methods: ['PUT', 'PATCH'])]
+    public function update(Category $category, Request $request, CategoryService $service): Response
     {
-        $form = $this->createForm(CategoryType::class, $category);
-        $form->handleRequest($request);
+        $data = json_decode($request->getContent(), true) ?? [];
+        $service->update($category, $data);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
-
-            return $this->redirectToRoute('app_category_index', [], Response::HTTP_SEE_OTHER);
-        }
-
-        return $this->render('category/edit.html.twig', [
-            'category' => $category,
-            'form' => $form,
-        ]);
+        return $this->json(['id' => $category->getId(), 'name' => $category->getName()]);
     }
 
-    #[Route('/{id}', name: 'app_category_delete', methods: ['POST'])]
-    public function delete(Request $request, Category $category, EntityManagerInterface $entityManager): Response
+    #[Route('/{id}', methods: ['DELETE'])]
+    public function delete(Category $category, CategoryService $service): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$category->getId(), $request->request->get('_token'))) {
-            $entityManager->remove($category);
-            $entityManager->flush();
-        }
-
-        return $this->redirectToRoute('app_category_index', [], Response::HTTP_SEE_OTHER);
+        $service->delete($category);
+        return $this->json(null, Response::HTTP_NO_CONTENT);
     }
 }

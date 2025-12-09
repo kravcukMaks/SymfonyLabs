@@ -14,11 +14,27 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/library/branch')]
 class LibraryBranchController extends AbstractController
 {
-    #[Route('/', name: 'app_library_branch_index', methods: ['GET'])]
-    public function index(LibraryBranchRepository $libraryBranchRepository): Response
-    {
-        return $this->render('library_branch/index.html.twig', [
-            'library_branches' => $libraryBranchRepository->findAll(),
+    #[Route('', methods: ['GET'])]
+    public function index(
+        Request $request,
+        LibraryBranchRepository $repo,
+        \App\Service\PaginationService $pager
+    ): Response {
+        $search = $request->query->get('search');
+        $page   = (int) $request->query->get('page', 1);
+        $limit  = (int) $request->query->get('limit', 10);
+
+        $result = $pager->paginate($repo->search($search), $page, $limit);
+
+        return $this->json([
+            'items' => array_map(fn(LibraryBranch $b) => [
+                'id'      => $b->getId(),
+                'name'    => $b->getName(),
+                'address' => $b->getAddress(),
+            ], $result['items']),
+            'page'  => $result['page'],
+            'limit' => $result['limit'],
+            'count' => $result['count'],
         ]);
     }
 

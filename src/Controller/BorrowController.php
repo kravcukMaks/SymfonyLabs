@@ -14,19 +14,30 @@ use Symfony\Component\Routing\Annotation\Route;
 class BorrowController extends AbstractController
 {
     #[Route('', methods: ['GET'])]
-    public function index(BorrowRepository $repo): Response
-    {
-        $borrows = $repo->findAll();
+    public function index(
+        Request $request,
+        BorrowRepository $repo,
+        \App\Service\PaginationService $pager
+    ): Response {
+        $search = $request->query->get('search'); // title/user/status
+        $page   = (int) $request->query->get('page', 1);
+        $limit  = (int) $request->query->get('limit', 10);
 
-        $data = array_map(fn(Borrow $b) => [
-            'id' => $b->getId(),
-            'user' => $b->getUser()->getName(),
-            'book' => $b->getBook()->getTitle(),
-            'borrowDate' => $b->getBorrowDate()->format('Y-m-d'),
-            'returnDate' => $b->getReturnDate()?->format('Y-m-d')
-        ], $borrows);
+        $result = $pager->paginate($repo->search($search), $page, $limit);
 
-        return $this->json($data);
+        return $this->json([
+            'items' => array_map(fn(Borrow $b) => [
+                'id'         => $b->getId(),
+                'bookTitle'  => $b->getBook()->getTitle(),
+                'userName'   => $b->getUser()->getName(),
+                'borrowDate' => $b->getBorrowDate()->format('Y-m-d'),
+                'returnDate' => $b->getReturnDate()?->format('Y-m-d'),
+                'status'     => $b->getStatus(),
+            ], $result['items']),
+            'page'  => $result['page'],
+            'limit' => $result['limit'],
+            'count' => $result['count'],
+        ]);
     }
 
     #[Route('', methods: ['POST'])]

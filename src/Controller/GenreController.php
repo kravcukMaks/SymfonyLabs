@@ -14,16 +14,26 @@ use Symfony\Component\Routing\Annotation\Route;
 class GenreController extends AbstractController
 {
     #[Route('', methods: ['GET'])]
-    public function index(GenreRepository $repo): Response
-    {
-        $genres = $repo->findAll();
+    public function index(
+        Request $request,
+        GenreRepository $repo,
+        \App\Service\PaginationService $pager
+    ): Response {
+        $search = $request->query->get('search');
+        $page   = (int) $request->query->get('page', 1);
+        $limit  = (int) $request->query->get('limit', 10);
 
-        $data = array_map(fn(Genre $g) => [
-            'id' => $g->getId(),
-            'name' => $g->getName(),
-        ], $genres);
+        $result = $pager->paginate($repo->search($search), $page, $limit);
 
-        return $this->json($data);
+        return $this->json([
+            'items' => array_map(fn(Genre $g) => [
+                'id'   => $g->getId(),
+                'name' => $g->getName(),
+            ], $result['items']),
+            'page'  => $result['page'],
+            'limit' => $result['limit'],
+            'count' => $result['count'],
+        ]);
     }
 
     #[Route('', methods: ['POST'])]
